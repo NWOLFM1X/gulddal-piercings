@@ -1,0 +1,29 @@
+{
+  "name": "gulddal-studio",
+  "private": true,
+  "version": "1.0.0",
+  "main": "package.json",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity start",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "deploy-graphql": "sanity graphql deploy",
+    "typegen": "sanity schema extract && sanity typegen generate"
+  },
+  "dependencies": {
+    "@sanity/icons": "^3",
+    "@sanity/vision": "^4",
+    "react": "^19",
+    "react-dom": "^19",
+    "sanity": "^4",
+    "styled-components": "^6"
+  },
+  "devDependencies": {
+    "@sanity/eslint-config-studio": "^5",
+    "@types/react": "^19",
+    "eslint": "^9",
+    "typescript": "^5"
+  }
+}

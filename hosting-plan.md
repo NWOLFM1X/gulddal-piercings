@@ -1,0 +1,69 @@
+# Plan: Step-by-step hosting af Gulddal Piercings
+
+Få siden online gratis: **Sanity** (backend + CMS), **Next.js på Vercel** (selve siden), og et **.dk-domæne**. Vigtigt fund: der er **ingen git** i projektet endnu, så repoet skal initialiseres fra bunden.
+
+## Steps
+
+### Trin 0 — Forbered (én gang)
+1. Opret/log ind på konti: [sanity.io](https://www.sanity.io/manage), GitHub og Vercel (log ind på Vercel med GitHub).
+2. Køb domænet `gulddalpiercings.dk` hos en dansk registrar (fx Simply.com eller DanDomain).
+
+### Trin 1 — Sanity backend klar
+3. Bekræft projekt `2ae9cktt` / dataset `production` findes.
+4. **API → Tokens**: opret token med rollen **Editor**, kopiér det (bruges af booking-API'en). Del det aldrig.
+5. **API → CORS Origins**: tilføj `http://localhost:3000` med *Allow credentials* (prod-domæne tilføjes i trin 6).
+
+### Trin 2 — Saml projektet i ét git-repo
+6. Kør i roden: `git init`, tjek at `.gitignore` dækker `node_modules`, `.env*`, `.next`.
+7. `git add . && git commit -m "Initial"` → opret repo på GitHub → `git push`.
+8. Hele mappen pushes som ét repo (`web/` og `studio/` som undermapper).
+
+### Trin 3 — Deploy siden på Vercel *(afhænger af trin 2)*
+9. Vercel → **New Project** → importér GitHub-repoet.
+10. Sæt **Root Directory = `web`**.
+11. Tilføj Environment Variables (Production — se nedenfor), `SANITY_API_WRITE_TOKEN` som **Secret**.
+12. **Deploy**. Du får en `*.vercel.app`-URL. Auto-deploy ved hvert push til `main`.
+
+### Trin 4 — Publicér Studio (CMS) *(kan køre parallelt med trin 3)*
+13. `cd studio && npm install && npm run deploy` → bliver til `gulddal-piercings.sanity.studio` (host er allerede sat).
+
+### Trin 5 — Kobl domænet på *(afhænger af trin 3)*
+14. Vercel → Project → **Domains** → tilføj `gulddalpiercings.dk` (+ evt. `www`).
+15. Sæt DNS hos registraren efter Vercels anvisning (A-record / CNAME).
+16. Opdater `NEXT_PUBLIC_SITE_URL` til `https://gulddalpiercings.dk` i Vercel → redeploy.
+
+### Trin 6 — Produktions-finish
+17. Sanity **CORS**: tilføj `https://gulddalpiercings.dk` (+ Vercel preview-domæne) med credentials.
+18. (Valgfrit) Discord-besked ved booking: opret Discord-webhook, sæt `DISCORD_WEBHOOK_URL`, `BOOKING_WEBHOOK_URL=https://gulddalpiercings.dk/api/webhooks/discord` og en fælles `BOOKING_WEBHOOK_SECRET`.
+
+### Trin 7 — Verifikation
+19. Siden loader på domænet; `/piercinger` og `/book` virker.
+20. Lav en testbooking → den dukker op i Studio, tiden markeres booket, og Discord-besked kommer (hvis sat op).
+21. Redigér noget i Studio → ændringen slår igennem på siden.
+22. Tjek `gulddalpiercings.dk/robots.txt` og `/sitemap.xml` peger på prod-domænet.
+
+## Env-variabler i Vercel (Production)
+- `NEXT_PUBLIC_SANITY_PROJECT_ID=2ae9cktt`
+- `NEXT_PUBLIC_SANITY_DATASET=production`
+- `NEXT_PUBLIC_SANITY_API_VERSION=2026-02-01`
+- `NEXT_PUBLIC_SITE_URL=https://gulddalpiercings.dk`
+- `SANITY_API_WRITE_TOKEN=<editor-token>` *(Secret)*
+- `BOOKING_WEBHOOK_URL` / `BOOKING_WEBHOOK_SECRET` / `DISCORD_WEBHOOK_URL` *(valgfrit)*
+
+## Relevante filer
+- [hosting.md](hosting.md) — filen der erstattes med denne guide
+- [studio/sanity.cli.ts](studio/sanity.cli.ts) — `studioHost: 'gulddal-piercings'` styrer studio-URL'en
+- [web/src/app/api/book/route.ts](web/src/app/api/book/route.ts) — booking-API, kræver `SANITY_API_WRITE_TOKEN`
+- [web/src/app/api/webhooks/discord/route.ts](web/src/app/api/webhooks/discord/route.ts) — Discord-eksempel til trin 6
+
+## Omkostninger
+0 kr. hosting (Vercel Hobby + Sanity Free) + ~50-120 kr./år for domænet.
+
+## Beslutninger / antagelser
+- Ét git-repo i roden, Vercel Root Directory = `web` (matcher nuværende plan).
+- Studio hostes på `sanity.studio` (host allerede konfigureret) frem for subdomæne.
+
+## Videre overvejelser
+1. Skal jeg **erstatte selve `hosting.md`-filen** med denne guide, når du godkender planen? (Ja / Nej — jeg skriver først ved godkendelse.)
+2. Discord-notifikationer: **med i første deploy** eller tilføjes senere?
+3. Domæne-registrar: **Simply.com** (god til .dk) eller har du allerede en?
