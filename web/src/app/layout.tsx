@@ -8,7 +8,6 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import type { SiteSettings } from "@/types";
 import { siteUrl } from "@/lib/site";
-import { getSession } from "@/lib/auth";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -63,7 +62,6 @@ export default async function RootLayout({
 }) {
   const { data: settings } = await sanityFetch({ query: siteSettingsQuery });
   const site = settings as SiteSettings;
-  const session = await getSession();
 
   return (
     <html
@@ -71,7 +69,7 @@ export default async function RootLayout({
       className={`${poppins.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="bg-soft min-h-full flex flex-col">
-        <Header settings={site} isLoggedIn={!!session} />
+        <Header settings={site} />
         <main className="flex-1">{children}</main>
         <Footer settings={site} />
         <SanityLive />

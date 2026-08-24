@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import type { SiteSettings } from "@/types";
@@ -14,21 +13,11 @@ const links = [
 
 export function Header({
   settings,
-  isLoggedIn,
 }: {
   settings: SiteSettings;
-  isLoggedIn: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const title = settings?.title || "Gulddal Piercings";
-
-  async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setOpen(false);
-    router.push("/");
-    router.refresh();
-  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-pink-100/70 bg-pink-50/70 backdrop-blur-md">
@@ -47,29 +36,6 @@ export function Header({
               {l.label}
             </Link>
           ))}
-          {isLoggedIn ? (
-            <>
-              <Link
-                href="/mine-bookinger"
-                className="rounded-full px-4 py-2 text-sm font-medium text-pink-800 transition-colors hover:bg-pink-100"
-              >
-                Mine bookinger
-              </Link>
-              <button
-                onClick={logout}
-                className="rounded-full px-4 py-2 text-sm font-medium text-pink-800 transition-colors hover:bg-pink-100"
-              >
-                Log ud
-              </button>
-            </>
-          ) : (
-            <Link
-              href="/login"
-              className="rounded-full px-4 py-2 text-sm font-medium text-pink-800 transition-colors hover:bg-pink-100"
-            >
-              Log ind
-            </Link>
-          )}
           <Link
             href="/book"
             className="ml-2 rounded-full bg-pink-500 px-5 py-2 text-sm font-semibold text-white shadow-sm shadow-pink-300 transition-transform hover:scale-105 hover:bg-pink-600"
@@ -113,31 +79,6 @@ export function Header({
                   {l.label}
                 </Link>
               ))}
-              {isLoggedIn ? (
-                <>
-                  <Link
-                    href="/mine-bookinger"
-                    onClick={() => setOpen(false)}
-                    className="rounded-xl px-4 py-3 font-medium text-pink-800 hover:bg-pink-100"
-                  >
-                    Mine bookinger
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="rounded-xl px-4 py-3 text-left font-medium text-pink-800 hover:bg-pink-100"
-                  >
-                    Log ud
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl px-4 py-3 font-medium text-pink-800 hover:bg-pink-100"
-                >
-                  Log ind
-                </Link>
-              )}
             </div>
           </motion.nav>
         )}

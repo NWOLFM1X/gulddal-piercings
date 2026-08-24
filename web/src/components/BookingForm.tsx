@@ -20,16 +20,14 @@ function formatSlot(iso?: string) {
 export function BookingForm({
   piercings,
   slots,
-  email,
 }: {
   piercings: Piercing[];
   slots: Slot[];
-  email: string;
 }) {
   const [step, setStep] = useState<Step>(0);
   const [piercing, setPiercing] = useState<Piercing | null>(null);
   const [slot, setSlot] = useState<Slot | null>(null);
-  const [form, setForm] = useState({ name: "", phone: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [company, setCompany] = useState(""); // honeypot
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +54,6 @@ export function BookingForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          email,
           company,
           piercingId: piercing._id,
           slotId: slot._id,
@@ -245,17 +242,13 @@ export function BookingForm({
                 onChange={(v) => setForm((f) => ({ ...f, name: v }))}
                 required
               />
-              <div>
-                <label className="mb-1 block text-sm font-medium text-pink-800">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  readOnly
-                  className="w-full cursor-not-allowed rounded-2xl border border-pink-200 bg-pink-50 px-4 py-3 text-pink-900/70 outline-none"
-                />
-              </div>
+              <Field
+                label="Email"
+                type="email"
+                value={form.email}
+                onChange={(v) => setForm((f) => ({ ...f, email: v }))}
+                required
+              />
               <Field
                 label="Telefon"
                 type="tel"

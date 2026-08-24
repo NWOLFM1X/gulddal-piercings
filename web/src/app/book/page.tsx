@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { sanityFetch } from "@/sanity/lib/live";
 import { piercingsQuery, availableSlotsQuery } from "@/sanity/lib/queries";
 import { BookingForm } from "@/components/BookingForm";
 import { Reveal } from "@/components/Reveal";
-import { getSession } from "@/lib/auth";
 import type { Piercing, Slot } from "@/types";
 
 export const metadata: Metadata = {
@@ -16,11 +14,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function BookPage() {
-  const session = await getSession();
-  if (!session) {
-    redirect("/login?returnTo=/book");
-  }
-
   const now = new Date().toISOString();
   const [{ data: piercings }, { data: slots }] = await Promise.all([
     sanityFetch({ query: piercingsQuery }),
@@ -44,7 +37,6 @@ export default async function BookPage() {
         <BookingForm
           piercings={(piercings as Piercing[]) ?? []}
           slots={(slots as Slot[]) ?? []}
-          email={session.email}
         />
       </Reveal>
     </div>

@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { writeClient } from '@/sanity/lib/writeClient'
-import { getSession } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 
 type BookingBody = {
   name?: string
+  email?: string
   phone?: string
   message?: string
   piercingId?: string
@@ -17,15 +17,6 @@ type BookingBody = {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(req: NextRequest) {
-  // Kræv login. Emailen tages fra den verificerede session — ikke fra body.
-  const session = await getSession()
-  if (!session) {
-    return NextResponse.json(
-      { error: 'Du skal være logget ind for at booke.' },
-      { status: 401 },
-    )
-  }
-
   let body: BookingBody
   try {
     body = (await req.json()) as BookingBody
@@ -34,7 +25,7 @@ export async function POST(req: NextRequest) {
   }
 
   const name = body.name?.trim()
-  const email = session.email
+  const email = body.email?.trim()
   const phone = body.phone?.trim()
   const message = body.message?.trim() || ''
   const { piercingId, slotId } = body
