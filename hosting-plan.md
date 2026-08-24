@@ -13,6 +13,10 @@ Få siden online gratis: **Sanity** (backend + CMS), **Next.js på Vercel** (sel
 4. **API → Tokens**: opret token med rollen **Editor**, kopiér det (bruges af booking-API'en). Del det aldrig.
 5. **API → CORS Origins**: tilføj `http://localhost:3000` med *Allow credentials* (prod-domæne tilføjes i trin 6).
 
+### Trin 1b — Email + auth klar (kunde-login)
+5a. Opret konto på [resend.com](https://resend.com), verificér afsender-domæne, og lav en `RESEND_API_KEY` (bruges til magic-link login-emails).
+5b. Generér en lang tilfældig `AUTH_SECRET` (fx `openssl rand -base64 32`) — signerer login/session-JWT for kunde-login og aflysning.
+
 ### Trin 2 — Saml projektet i ét git-repo
 6. Kør i roden: `git init`, tjek at `.gitignore` dækker `node_modules`, `.env*`, `.next`.
 7. `git add . && git commit -m "Initial"` → opret repo på GitHub → `git push`.
@@ -21,7 +25,7 @@ Få siden online gratis: **Sanity** (backend + CMS), **Next.js på Vercel** (sel
 ### Trin 3 — Deploy siden på Vercel *(afhænger af trin 2)*
 9. Vercel → **New Project** → importér GitHub-repoet.
 10. Sæt **Root Directory = `web`**.
-11. Tilføj Environment Variables (Production — se nedenfor), `SANITY_API_WRITE_TOKEN` som **Secret**.
+11. Tilføj Environment Variables (Production — se nedenfor). Marker `SANITY_API_WRITE_TOKEN`, `SANITY_API_READ_TOKEN`, `AUTH_SECRET` og `RESEND_API_KEY` som **Secret**.
 12. **Deploy**. Du får en `*.vercel.app`-URL. Auto-deploy ved hvert push til `main`.
 
 ### Trin 4 — Publicér Studio (CMS) *(kan køre parallelt med trin 3)*
@@ -39,21 +43,32 @@ Få siden online gratis: **Sanity** (backend + CMS), **Next.js på Vercel** (sel
 ### Trin 7 — Verifikation
 19. Siden loader på domænet; `/piercinger` og `/book` virker.
 20. Lav en testbooking → den dukker op i Studio, tiden markeres booket, og Discord-besked kommer (hvis sat op).
-21. Redigér noget i Studio → ændringen slår igennem på siden.
-22. Tjek `gulddalpiercings.dk/robots.txt` og `/sitemap.xml` peger på prod-domænet.
+21. Test kunde-login: bed om magic-link på `/login`, tjek at emailen ankommer (Resend) og at `/mine-bookinger` + aflysning virker.
+22. Redigér noget i Studio → ændringen slår igennem på siden.
+23. Tjek `gulddalpiercings.dk/robots.txt` og `/sitemap.xml` peger på prod-domænet.
 
 ## Env-variabler i Vercel (Production)
 - `NEXT_PUBLIC_SANITY_PROJECT_ID=2ae9cktt`
 - `NEXT_PUBLIC_SANITY_DATASET=production`
 - `NEXT_PUBLIC_SANITY_API_VERSION=2026-02-01`
 - `NEXT_PUBLIC_SITE_URL=https://gulddalpiercings.dk`
-- `SANITY_API_WRITE_TOKEN=<editor-token>` *(Secret)*
+- `SANITY_API_WRITE_TOKEN=<editor-token>` *(Secret)* — booking-API'ens skrive-token
+- `SANITY_API_READ_TOKEN=<viewer-token>` *(Secret)* — server-side live-forbindelse, så publiceret indhold vises uden redeploy
+- `AUTH_SECRET=<lang tilfældig streng>` *(Secret)* — signerer login/session-JWT (kunde-login + aflysning)
+- `RESEND_API_KEY=<resend key>` *(Secret)* — sender magic-link login-emails
+- `RESEND_FROM="Gulddal Piercings <no-reply@verificeret-domæne>"` — afsender på login-emails
 - `BOOKING_WEBHOOK_URL` / `BOOKING_WEBHOOK_SECRET` / `DISCORD_WEBHOOK_URL` *(valgfrit)*
+
+> Studio (`studio/`) bruger separat `SANITY_STUDIO_PROJECT_ID` (+ evt. `SANITY_STUDIO_DATASET`) ved lokal kørsel/deploy — sættes i `studio/.env`, ikke i Vercel.
+> Til lokal udvikling: læg samme web-variabler i `web/.env.local` (med `NEXT_PUBLIC_SITE_URL=http://localhost:3000`).
 
 ## Relevante filer
 - [hosting.md](hosting.md) — filen der erstattes med denne guide
 - [studio/sanity.cli.ts](studio/sanity.cli.ts) — `studioHost: 'gulddal-piercings'` styrer studio-URL'en
 - [web/src/app/api/book/route.ts](web/src/app/api/book/route.ts) — booking-API, kræver `SANITY_API_WRITE_TOKEN`
+- [web/src/sanity/lib/live.ts](web/src/sanity/lib/live.ts) — live-forbindelse, kræver `SANITY_API_READ_TOKEN` for at vise nyt indhold i prod
+- [web/src/lib/auth.ts](web/src/lib/auth.ts) — kræver `AUTH_SECRET` til login/session-JWT
+- [web/src/lib/email.ts](web/src/lib/email.ts) — kræver `RESEND_API_KEY` (+ `RESEND_FROM`) til login-emails
 - [web/src/app/api/webhooks/discord/route.ts](web/src/app/api/webhooks/discord/route.ts) — Discord-eksempel til trin 6
 
 ## Omkostninger
