@@ -1,5 +1,6 @@
 import { defineField, defineType } from 'sanity'
 import { CalendarIcon } from '@sanity/icons'
+import { TimeSlotDateTimeInput } from '../components/TimeSlotDateTimeInput'
 
 export const timeSlot = defineType({
   name: 'timeSlot',
@@ -11,11 +12,14 @@ export const timeSlot = defineType({
       name: 'startsAt',
       title: 'Dato og tid',
       type: 'datetime',
-      description: 'Hvornår tiden starter.',
+      description: 'Vælg dato og klik på et tidspunkt.',
       options: {
         dateFormat: 'DD-MM-YYYY',
         timeFormat: 'HH:mm',
         timeStep: 15,
+      },
+      components: {
+        input: TimeSlotDateTimeInput,
       },
       validation: (rule) => rule.required(),
     }),

@@ -14,10 +14,10 @@
   },
   "dependencies": {
     "@sanity/icons": "^3",
-    "@sanity/vision": "^4",
+    "@sanity/vision": "^6",
     "react": "^19",
     "react-dom": "^19",
-    "sanity": "^4",
+    "sanity": "^6.10.1",
     "styled-components": "^6"
   },
   "devDependencies": {
@@ -25,5 +25,13 @@
     "@types/react": "^19",
     "eslint": "^9",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@vercel/frameworks": {
+      "smol-toml": "^1.8.0"
+    },
+    "typeid-js": {
+      "uuid": "^11.1.1"
+    }
   }
 }

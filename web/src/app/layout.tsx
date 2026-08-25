@@ -8,6 +8,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import type { SiteSettings } from "@/types";
 import { siteUrl } from "@/lib/site";
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -73,6 +75,8 @@ export default async function RootLayout({
         <main className="flex-1">{children}</main>
         <Footer settings={site} />
         <SanityLive />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
