@@ -26,14 +26,23 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
-/** Signeret engangs-token til magic link (kort levetid). */
-export async function createMagicToken(email: string): Promise<string> {
+/**
+ * Signeret engangs-token til magic link.
+ *
+ * Standard-levetid er kort (15 min) til login. Bekræftelses-mails efter en
+ * booking bruger en længere levetid, så kunden kan klikke sig direkte ind og
+ * administrere sin booking i dagene efter.
+ */
+export async function createMagicToken(
+  email: string,
+  ttl: string = MAGIC_TTL,
+): Promise<string> {
   return new SignJWT({ email: normalizeEmail(email) })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuer(ISSUER)
     .setAudience(AUD_MAGIC)
     .setIssuedAt()
-    .setExpirationTime(MAGIC_TTL)
+    .setExpirationTime(ttl)
     .sign(getSecret())
 }
 

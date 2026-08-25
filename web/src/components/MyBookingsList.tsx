@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { MyBooking } from "@/types";
+import type { MyBooking, Piercing } from "@/types";
 
 function formatSlot(iso?: string) {
   if (!iso) return "Tid ukendt";
@@ -26,9 +26,16 @@ const STATUS_STYLE: Record<string, string> = {
   cancelled: "bg-pink-100 text-pink-500",
 };
 
-export function MyBookingsList({ bookings }: { bookings: MyBooking[] }) {
+export function MyBookingsList({
+  bookings,
+  piercings,
+}: {
+  bookings: MyBooking[];
+  piercings: Piercing[];
+}) {
   const [items, setItems] = useState(bookings);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function cancel(id: string) {
@@ -49,6 +56,34 @@ export function MyBookingsList({ bookings }: { bookings: MyBooking[] }) {
       setError("Kunne ikke oprette forbindelse. Prøv igen.");
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function changePiercing(id: string, piercingId: string) {
+    setSavingId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/bookings/${id}/piercing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ piercingId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Kunne ikke skifte piercing. Prøv igen.");
+        return;
+      }
+      setItems((prev) =>
+        prev.map((b) =>
+          b._id === id
+            ? { ...b, piercingId, piercingName: data.piercingName }
+            : b,
+        ),
+      );
+    } catch {
+      setError("Kunne ikke oprette forbindelse. Prøv igen.");
+    } finally {
+      setSavingId(null);
     }
   }
 
@@ -73,6 +108,7 @@ export function MyBookingsList({ bookings }: { bookings: MyBooking[] }) {
           ? new Date(b.slotStartsAt) < new Date()
           : false;
         const canCancel = status !== "cancelled" && !isPast;
+        const canChange = status !== "cancelled" && !isPast;
         return (
           <div
             key={b._id}
@@ -95,6 +131,39 @@ export function MyBookingsList({ bookings }: { bookings: MyBooking[] }) {
                 {STATUS_LABEL[status] ?? status}
               </span>
             </div>
+
+            {canChange && piercings.length > 0 && (
+              <div className="mt-4">
+                <label
+                  htmlFor={`piercing-${b._id}`}
+                  className="mb-1 block text-sm font-medium text-pink-800"
+                >
+                  Skift piercing
+                </label>
+                <select
+                  id={`piercing-${b._id}`}
+                  value={b.piercingId ?? ""}
+                  disabled={savingId === b._id}
+                  onChange={(e) => changePiercing(b._id, e.target.value)}
+                  className="w-full rounded-2xl border border-pink-200 bg-white px-4 py-2.5 text-pink-900 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {b.piercingId == null && (
+                    <option value="" disabled>
+                      Vælg piercing
+                    </option>
+                  )}
+                  {piercings.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name}
+                      {p.price != null ? ` · ${p.price} kr.` : ""}
+                    </option>
+                  ))}
+                </select>
+                {savingId === b._id && (
+                  <p className="mt-1 text-xs text-pink-600">Gemmer…</p>
+                )}
+              </div>
+            )}
 
             {canCancel && (
               <div className="mt-4 flex justify-end">

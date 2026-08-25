@@ -42,6 +42,22 @@ export const siteSettings = defineType({
       type: 'string',
     }),
     defineField({
+      name: 'notifyEmail',
+      title: 'Besked-email (booking-notifikationer)',
+      type: 'string',
+      description:
+        'Du får en email hertil, hver gang der kommer en ny booking. Lad stå tom for at slå fra.',
+      validation: (rule) =>
+        rule.email().warning('Skriv en gyldig email-adresse.'),
+    }),
+    defineField({
+      name: 'notifyPhone',
+      title: 'Besked-SMS (telefonnummer)',
+      type: 'string',
+      description:
+        'Telefonnummer der får en SMS ved nye bookinger. Skriv med landekode, fx +4512345678. Kræver at SMS er sat op. Lad stå tom for at slå fra.',
+    }),
+    defineField({
       name: 'address',
       title: 'Adresse',
       type: 'text',

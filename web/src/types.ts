@@ -43,6 +43,7 @@ export type MyBooking = {
   status?: "new" | "confirmed" | "cancelled";
   message?: string;
   _createdAt?: string;
+  piercingId?: string;
   piercingName?: string;
   slotStartsAt?: string;
   slotStatus?: string;

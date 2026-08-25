@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { writeClient } from "@/sanity/lib/writeClient";
-import { bookingsByEmailQuery } from "@/sanity/lib/queries";
+import { bookingsByEmailQuery, piercingsQuery } from "@/sanity/lib/queries";
 import { MyBookingsList } from "@/components/MyBookingsList";
 import { Reveal } from "@/components/Reveal";
-import type { MyBooking } from "@/types";
+import type { MyBooking, Piercing } from "@/types";
 
 export const metadata: Metadata = {
   title: "Mine bookinger",
@@ -21,9 +21,12 @@ export default async function MyBookingsPage() {
   }
 
   // Privat data hentes med skrive-klienten (token, ingen CDN).
-  const bookings = await writeClient.fetch<MyBooking[]>(bookingsByEmailQuery, {
-    email: session.email,
-  });
+  const [bookings, piercings] = await Promise.all([
+    writeClient.fetch<MyBooking[]>(bookingsByEmailQuery, {
+      email: session.email,
+    }),
+    writeClient.fetch<Piercing[]>(piercingsQuery),
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
@@ -39,7 +42,7 @@ export default async function MyBookingsPage() {
       </Reveal>
 
       <Reveal delay={0.1}>
-        <MyBookingsList bookings={bookings ?? []} />
+        <MyBookingsList bookings={bookings ?? []} piercings={piercings ?? []} />
       </Reveal>
     </div>
   );

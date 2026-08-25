@@ -1,5 +1,13 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { writeClient } from '@/sanity/lib/writeClient'
+import { createMagicToken } from '@/lib/auth'
+import {
+  buildLoginUrl,
+  sendBookingConfirmationEmail,
+  sendOwnerBookingNotification,
+  sendSms,
+  type BookingDetails,
+} from '@/lib/email'
 
 export const runtime = 'nodejs'
 
@@ -127,6 +135,18 @@ export async function POST(req: NextRequest) {
       slot,
     })
 
+    // Send bekræftelse til kunden + notifikation til ejeren (fejl må ikke
+    // vælte bookingen).
+    await notifyBooking({
+      name,
+      email,
+      phone,
+      message,
+      piercingName: piercing.name,
+      price: piercing.price,
+      startsAt: slot.startsAt,
+    })
+
     return NextResponse.json({ ok: true, bookingId })
   } catch (err) {
     console.error('Booking-fejl:', err)
@@ -206,5 +226,55 @@ async function notifyWebhook(data: {
     }
   } catch (err) {
     console.error('Kunne ikke sende webhook:', err)
+  }
+}
+
+/**
+ * Sender bekræftelses-mail til kunden og en notifikation (email + evt. SMS)
+ * til ejeren. Ejerens kontaktinfo hentes fra Sanity (Indstillinger), så den
+ * kan ændres uden en ny udrulning. Alle fejl fanges her, så de aldrig kan
+ * vælte selve bookingen.
+ */
+async function notifyBooking(booking: BookingDetails) {
+  // Kundens bekræftelse med et langtidsholdbart login-link til at
+  // administrere (skifte piercing / aflyse) bookingen.
+  try {
+    const token = await createMagicToken(booking.email, '7d')
+    const manageUrl = buildLoginUrl(token, '/mine-bookinger')
+    await sendBookingConfirmationEmail(booking, manageUrl)
+  } catch (err) {
+    console.error('Kunne ikke sende kunde-bekræftelse:', err)
+  }
+
+  // Ejerens notifikation. Kontaktinfo hentes frisk fra Sanity.
+  try {
+    const settings = await writeClient.fetch<{
+      notifyEmail?: string
+      notifyPhone?: string
+    } | null>(`*[_type == "siteSettings"][0]{ notifyEmail, notifyPhone }`)
+
+    const notifyEmail = settings?.notifyEmail?.trim()
+    const notifyPhone = settings?.notifyPhone?.trim()
+
+    if (notifyEmail) {
+      await sendOwnerBookingNotification(notifyEmail, booking)
+    }
+
+    if (notifyPhone) {
+      const when = booking.startsAt
+        ? new Date(booking.startsAt).toLocaleString('da-DK', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : 'ukendt tid'
+      await sendSms(
+        notifyPhone,
+        `Ny booking: ${booking.name} — ${booking.piercingName} — ${when}. Tlf: ${booking.phone}`,
+      )
+    }
+  } catch (err) {
+    console.error('Kunne ikke sende ejer-notifikation:', err)
   }
 }
