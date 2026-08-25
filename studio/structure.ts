@@ -5,10 +5,11 @@ import {
   TagIcon,
   CogIcon,
   HomeIcon,
+  HeartIcon,
 } from '@sanity/icons'
 
 // Singletons — dokumenter der kun findes ét af.
-const singletons = ['siteSettings', 'homePage']
+const singletons = ['siteSettings', 'homePage', 'aftercare']
 
 export const structure: StructureResolver = (S) =>
   S.list()
@@ -44,6 +45,11 @@ export const structure: StructureResolver = (S) =>
         .icon(HomeIcon)
         .id('homePage')
         .child(S.document().schemaType('homePage').documentId('homePage')),
+      S.listItem()
+        .title('Efterbehandling')
+        .icon(HeartIcon)
+        .id('aftercare')
+        .child(S.document().schemaType('aftercare').documentId('aftercare')),
       S.listItem()
         .title('Indstillinger')
         .icon(CogIcon)

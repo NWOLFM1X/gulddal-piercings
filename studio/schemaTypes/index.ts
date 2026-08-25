@@ -5,7 +5,8 @@ import { timeSlot } from './timeSlot'
 import { booking } from './booking'
 import { siteSettings } from './siteSettings'
 import { homePage } from './homePage'
+import { aftercare } from './aftercare'
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [piercingType, timeSlot, booking, siteSettings, homePage],
+  types: [piercingType, timeSlot, booking, siteSettings, homePage, aftercare],
 }

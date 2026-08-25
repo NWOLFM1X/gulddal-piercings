@@ -8,6 +8,7 @@ import type { SiteSettings } from "@/types";
 const links = [
   { href: "/", label: "Forside" },
   { href: "/piercinger", label: "Piercinger" },
+  { href: "/efterbehandling", label: "Efterbehandling" },
   { href: "/book", label: "Book tid" },
 ];
 

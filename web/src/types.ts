@@ -51,6 +51,12 @@ export type MyBooking = {
 
 export type FaqItem = { question?: string; answer?: string };
 
+export type Aftercare = {
+  heading?: string;
+  intro?: string;
+  body?: PortableTextBlock[];
+} | null;
+
 export type HomePage = {
   heroHeading?: string;
   heroSubheading?: string;

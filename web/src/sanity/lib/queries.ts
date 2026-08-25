@@ -58,8 +58,16 @@ export const piercingBySlugQuery = defineQuery(`
     description,
     price,
     durationMinutes,
-    image,
-    aftercare
+    image
+  }
+`)
+
+// Efterbehandling / pleje (singleton).
+export const aftercareQuery = defineQuery(`
+  *[_type == "aftercare"][0]{
+    heading,
+    intro,
+    body
   }
 `)
 

@@ -66,12 +66,6 @@ export const piercingType = defineType({
       options: { hotspot: true },
     }),
     defineField({
-      name: 'aftercare',
-      title: 'Efterbehandling / pleje',
-      type: 'array',
-      of: [{ type: 'block' }],
-    }),
-    defineField({
       name: 'popular',
       title: 'Populær (vis som fremhævet)',
       type: 'boolean',
