@@ -73,6 +73,7 @@ export const timeSlot = defineType({
             month: '2-digit',
             hour: '2-digit',
             minute: '2-digit',
+            timeZone: 'Europe/Copenhagen',
           })
         : 'Ingen tid valgt'
       return {

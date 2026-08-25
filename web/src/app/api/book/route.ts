@@ -33,7 +33,10 @@ export async function POST(req: NextRequest) {
   }
 
   const name = body.name?.trim()
-  const email = body.email?.trim()
+  // Normalisér email til små bogstaver, så den matcher login-sessionen
+  // (magic-token normaliserer også). Ellers kan kunden ikke se/administrere
+  // sine bookinger bagefter.
+  const email = body.email?.trim().toLowerCase()
   const phone = body.phone?.trim()
   const message = body.message?.trim() || ''
   const { piercingId, slotId } = body
@@ -267,6 +270,7 @@ async function notifyBooking(booking: BookingDetails) {
             month: '2-digit',
             hour: '2-digit',
             minute: '2-digit',
+            timeZone: 'Europe/Copenhagen',
           })
         : 'ukendt tid'
       await sendSms(

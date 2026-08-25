@@ -73,9 +73,10 @@ export const availableSlotsQuery = defineQuery(`
     }
 `)
 
-// En kundes egne bookinger (nyeste først).
+// En kundes egne bookinger (nyeste først). Sammenlign i små bogstaver, så
+// ældre bookinger med store bogstaver i emailen også matcher login-sessionen.
 export const bookingsByEmailQuery = defineQuery(`
-  *[_type == "booking" && email == $email] | order(_createdAt desc){
+  *[_type == "booking" && lower(email) == $email] | order(_createdAt desc){
     _id,
     status,
     message,

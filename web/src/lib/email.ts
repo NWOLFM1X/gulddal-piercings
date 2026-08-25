@@ -61,7 +61,7 @@ export function buildLoginUrl(token: string, returnTo?: string): string {
   return url.toString()
 }
 
-/** Formatér et ISO-tidspunkt pænt på dansk. */
+/** Formatér et ISO-tidspunkt pænt på dansk (altid dansk tidszone). */
 function formatDateTime(iso?: string): string {
   if (!iso) return 'Ukendt tid'
   return new Date(iso).toLocaleString('da-DK', {
@@ -70,6 +70,7 @@ function formatDateTime(iso?: string): string {
     month: 'long',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Europe/Copenhagen',
   })
 }
 
