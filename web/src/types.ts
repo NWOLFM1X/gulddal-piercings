@@ -57,10 +57,22 @@ export type Aftercare = {
   body?: PortableTextBlock[];
 } | null;
 
+export type BeforeBookingSection = {
+  title?: string;
+  body?: PortableTextBlock[];
+};
+
+export type BeforeBooking = {
+  heading?: string;
+  intro?: string;
+  sections?: BeforeBookingSection[];
+} | null;
+
 export type HomePage = {
   heroHeading?: string;
   heroSubheading?: string;
   heroImage?: SanityImage;
+  apprenticeNotice?: string;
   aboutHeading?: string;
   aboutBody?: PortableTextBlock[];
   aboutImage?: SanityImage;

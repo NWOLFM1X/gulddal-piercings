@@ -21,6 +21,7 @@ export const homePageQuery = defineQuery(`
     heroHeading,
     heroSubheading,
     heroImage,
+    apprenticeNotice,
     aboutHeading,
     aboutBody,
     aboutImage,
@@ -68,6 +69,18 @@ export const aftercareQuery = defineQuery(`
     heading,
     intro,
     body
+  }
+`)
+
+// Før din booking (singleton).
+export const beforeBookingQuery = defineQuery(`
+  *[_type == "beforeBooking"][0]{
+    heading,
+    intro,
+    sections[]{
+      title,
+      body
+    }
   }
 `)
 

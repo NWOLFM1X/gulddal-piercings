@@ -84,6 +84,16 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ELEV-BESKED */}
+      {page?.apprenticeNotice && (
+        <section className="border-y border-pink-200 bg-pink-50">
+          <div className="mx-auto flex max-w-6xl items-start gap-3 px-5 py-4 text-sm text-pink-800">
+            <span className="mt-0.5 shrink-0 text-base">ℹ️</span>
+            <p>{page.apprenticeNotice}</p>
+          </div>
+        </section>
+      )}
+
       {/* FREMHÆVEDE PIERCINGER */}
       {showcase.length > 0 && (
         <section className="mx-auto max-w-6xl px-5 py-12">

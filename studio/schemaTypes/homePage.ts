@@ -35,6 +35,15 @@ export const homePage = defineType({
       group: 'hero',
     }),
     defineField({
+      name: 'apprenticeNotice',
+      title: 'Elev-besked (banner)',
+      type: 'text',
+      rows: 2,
+      group: 'hero',
+      description: 'Vises som en tydelig besked på forsiden, fx at du er elev-piercer under oplæring. Lad feltet være tomt for at skjule banneret.',
+      initialValue: 'Jeg er elev-piercer og arbejder under professionel oplæring og vejledning.',
+    }),
+    defineField({
       name: 'aboutHeading',
       title: 'Overskrift',
       type: 'string',
