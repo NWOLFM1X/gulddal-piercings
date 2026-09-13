@@ -14,10 +14,10 @@
   },
   "dependencies": {
     "@sanity/icons": "^3",
-    "@sanity/vision": "^6.11.0",
+    "@sanity/vision": "^6.13.2",
     "react": "^19",
     "react-dom": "^19",
-    "sanity": "^6.11.0",
+    "sanity": "^6.13.2",
     "styled-components": "^6"
   },
   "devDependencies": {

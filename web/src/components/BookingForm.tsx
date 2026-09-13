@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
+import { urlForImage } from "@/sanity/lib/image";
 import type { Piercing, Slot } from "@/types";
 
 type Step = 0 | 1 | 2 | 3;
@@ -170,35 +172,62 @@ export function BookingForm({
                   const selected = selectedPiercings.some(
                     (sel) => sel._id === p._id,
                   );
+                  const img = p.image?.asset
+                    ? urlForImage(p.image).width(120).height(120).fit("crop").url()
+                    : null;
                   return (
                     <button
                       key={p._id}
                       onClick={() => togglePiercing(p)}
-                      className={`flex items-center justify-between rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                      className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${
                         selected
                           ? "border-pink-400 bg-pink-50"
                           : "border-pink-100 bg-white"
                       }`}
                     >
-                      <span className="flex items-center gap-3">
-                        <span
-                          className={`flex h-5 w-5 items-center justify-center rounded-md border text-xs text-white ${
-                            selected
-                              ? "border-pink-500 bg-pink-500"
-                              : "border-pink-300 bg-white"
-                          }`}
-                        >
-                          {selected && "✓"}
+                      <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-pink-100">
+                        {img ? (
+                          <Image
+                            src={img}
+                            alt={p.name || "Piercing"}
+                            fill
+                            sizes="56px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-full items-center justify-center text-xl">
+                            💎
+                          </span>
+                        )}
+                      </span>
+                      <span className="flex flex-1 items-center justify-between gap-2">
+                        <span className="flex flex-col">
+                          <span className="font-medium text-pink-800">
+                            {p.name}
+                          </span>
+                          {p.durationMinutes != null && (
+                            <span className="text-xs text-pink-900/50">
+                              ⏱ Ca. {p.durationMinutes} min.
+                            </span>
+                          )}
                         </span>
-                        <span className="font-medium text-pink-800">
-                          {p.name}
+                        <span className="flex shrink-0 items-center gap-2">
+                          {p.price != null && (
+                            <span className="text-sm font-semibold text-pink-600">
+                              {p.price} kr.
+                            </span>
+                          )}
+                          <span
+                            className={`flex h-5 w-5 items-center justify-center rounded-md border text-xs text-white ${
+                              selected
+                                ? "border-pink-500 bg-pink-500"
+                                : "border-pink-300 bg-white"
+                            }`}
+                          >
+                            {selected && "✓"}
+                          </span>
                         </span>
                       </span>
-                      {p.price != null && (
-                        <span className="text-sm font-semibold text-pink-600">
-                          {p.price} kr.
-                        </span>
-                      )}
                     </button>
                   );
                 })}
