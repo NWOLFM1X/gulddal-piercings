@@ -1,10 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'node:crypto'
 import { writeClient } from '@/sanity/lib/writeClient'
 import { getSession } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 
-type Body = { piercingId?: string }
+type Body = { piercingIds?: string[] }
 
 type BookingRow = {
   _id: string
@@ -35,13 +36,15 @@ export async function POST(
     return NextResponse.json({ error: 'Ugyldig forespørgsel.' }, { status: 400 })
   }
 
-  const piercingId = body.piercingId?.trim()
-  if (!piercingId) {
-    return NextResponse.json({ error: 'Vælg en piercing.' }, { status: 400 })
+  const piercingIds = Array.isArray(body.piercingIds)
+    ? [...new Set(body.piercingIds.filter((id): id is string => Boolean(id)))]
+    : []
+  if (piercingIds.length === 0) {
+    return NextResponse.json({ error: 'Vælg mindst én piercing.' }, { status: 400 })
   }
 
   try {
-    const [booking, piercing] = await Promise.all([
+    const [booking, piercings] = await Promise.all([
       writeClient.fetch<BookingRow | null>(
         `*[_type == "booking" && _id == $id][0]{
           _id, _rev, email, status,
@@ -49,9 +52,9 @@ export async function POST(
         }`,
         { id },
       ),
-      writeClient.fetch<{ _id: string; name: string } | null>(
-        `*[_type == "piercingType" && _id == $id && active == true][0]{ _id, name }`,
-        { id: piercingId },
+      writeClient.fetch<{ _id: string; name: string }[]>(
+        `*[_type == "piercingType" && _id in $ids && active == true]{ _id, name }`,
+        { ids: piercingIds },
       ),
     ])
 
@@ -79,9 +82,9 @@ export async function POST(
       )
     }
 
-    if (!piercing) {
+    if (piercings.length !== piercingIds.length) {
       return NextResponse.json(
-        { error: 'Piercingen findes ikke.' },
+        { error: 'En eller flere piercinger findes ikke.' },
         { status: 404 },
       )
     }
@@ -90,7 +93,13 @@ export async function POST(
       await writeClient
         .patch(booking._id)
         .ifRevisionId(booking._rev)
-        .set({ piercing: { _type: 'reference', _ref: piercingId } })
+        .set({
+          piercings: piercingIds.map((piercingId) => ({
+            _type: 'reference',
+            _ref: piercingId,
+            _key: randomUUID(),
+          })),
+        })
         .commit({ returnDocuments: false })
     } catch (err) {
       console.error('Skift-piercing-transaktion fejlede:', err)
@@ -100,7 +109,13 @@ export async function POST(
       )
     }
 
-    return NextResponse.json({ ok: true, piercingName: piercing.name })
+    return NextResponse.json({
+      ok: true,
+      piercings: piercingIds.map((id) => ({
+        _id: id,
+        name: piercings.find((p) => p._id === id)?.name ?? '',
+      })),
+    })
   } catch (err) {
     console.error('Skift-piercing-fejl:', err)
     return NextResponse.json(

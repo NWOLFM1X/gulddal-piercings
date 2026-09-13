@@ -25,7 +25,7 @@ type BookingEvent = {
     email?: string;
     phone?: string;
     message?: string;
-    piercing?: { id?: string; name?: string; price?: number };
+    piercings?: { id?: string; name?: string; price?: number }[];
     slot?: { id?: string; startsAt?: string };
     createdAt?: string;
   };
@@ -70,17 +70,19 @@ export async function POST(req: NextRequest) {
     : "Ukendt tid";
 
   // Pæn Discord-besked med "embed".
+  const piercingNames = b.piercings?.map((p) => p.name).filter(Boolean).join(", ");
+  const totalPrice = b.piercings?.reduce((sum, p) => sum + (p.price ?? 0), 0);
   const discordMessage = {
     content: "💖 **Ny booking!**",
     embeds: [
       {
-        title: b.piercing?.name || "Piercing",
+        title: piercingNames || "Piercing",
         color: 0xf5338a, // pink
         fields: [
           { name: "Navn", value: b.name || "—", inline: true },
           {
             name: "Pris",
-            value: b.piercing?.price != null ? `${b.piercing.price} kr.` : "—",
+            value: totalPrice != null && totalPrice > 0 ? `${totalPrice} kr.` : "—",
             inline: true,
           },
           { name: "Tid", value: when, inline: false },

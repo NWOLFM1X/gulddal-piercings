@@ -26,7 +26,7 @@ export function BookingForm({
   slots: Slot[];
 }) {
   const [step, setStep] = useState<Step>(0);
-  const [piercing, setPiercing] = useState<Piercing | null>(null);
+  const [selectedPiercings, setSelectedPiercings] = useState<Piercing[]>([]);
   const [slot, setSlot] = useState<Slot | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [company, setCompany] = useState(""); // honeypot
@@ -45,8 +45,25 @@ export function BookingForm({
     [slots],
   );
 
+  const totalPrice = useMemo(
+    () =>
+      selectedPiercings.reduce(
+        (sum, p) => (p.price != null ? sum + p.price : sum),
+        0,
+      ),
+    [selectedPiercings],
+  );
+
+  function togglePiercing(p: Piercing) {
+    setSelectedPiercings((prev) =>
+      prev.some((sel) => sel._id === p._id)
+        ? prev.filter((sel) => sel._id !== p._id)
+        : [...prev, p],
+    );
+  }
+
   async function submit() {
-    if (!piercing || !slot) return;
+    if (selectedPiercings.length === 0 || !slot) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -56,7 +73,7 @@ export function BookingForm({
         body: JSON.stringify({
           ...form,
           company,
-          piercingId: piercing._id,
+          piercingIds: selectedPiercings.map((p) => p._id),
           slotId: slot._id,
         }),
       });
@@ -85,7 +102,8 @@ export function BookingForm({
           Tak for din booking!
         </h2>
         <p className="mt-3 text-pink-900/70">
-          Vi har modtaget din anmodning om <strong>{piercing?.name}</strong>
+          Vi har modtaget din anmodning om{" "}
+          <strong>{selectedPiercings.map((p) => p.name).join(", ")}</strong>
           <br />
           {formatSlot(slot?.startsAt)}.
         </p>
@@ -136,38 +154,73 @@ export function BookingForm({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
           >
-            <h2 className="mb-4 font-display text-xl font-semibold text-pink-800">
-              Hvilken piercing vil du have?
+            <h2 className="mb-1 font-display text-xl font-semibold text-pink-800">
+              Hvilke piercinger vil du have?
             </h2>
+            <p className="mb-4 text-sm text-pink-900/60">
+              Du kan vælge en eller flere piercinger.
+            </p>
             {piercings.length === 0 ? (
               <p className="text-pink-900/60">
                 Der er ingen piercinger tilgængelige lige nu.
               </p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
-                {piercings.map((p) => (
-                  <button
-                    key={p._id}
-                    onClick={() => {
-                      setPiercing(p);
-                      setStep(1);
-                    }}
-                    className={`flex items-center justify-between rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${
-                      piercing?._id === p._id
-                        ? "border-pink-400 bg-pink-50"
-                        : "border-pink-100 bg-white"
-                    }`}
-                  >
-                    <span className="font-medium text-pink-800">{p.name}</span>
-                    {p.price != null && (
-                      <span className="text-sm font-semibold text-pink-600">
-                        {p.price} kr.
+                {piercings.map((p) => {
+                  const selected = selectedPiercings.some(
+                    (sel) => sel._id === p._id,
+                  );
+                  return (
+                    <button
+                      key={p._id}
+                      onClick={() => togglePiercing(p)}
+                      className={`flex items-center justify-between rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                        selected
+                          ? "border-pink-400 bg-pink-50"
+                          : "border-pink-100 bg-white"
+                      }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span
+                          className={`flex h-5 w-5 items-center justify-center rounded-md border text-xs text-white ${
+                            selected
+                              ? "border-pink-500 bg-pink-500"
+                              : "border-pink-300 bg-white"
+                          }`}
+                        >
+                          {selected && "✓"}
+                        </span>
+                        <span className="font-medium text-pink-800">
+                          {p.name}
+                        </span>
                       </span>
-                    )}
-                  </button>
-                ))}
+                      {p.price != null && (
+                        <span className="text-sm font-semibold text-pink-600">
+                          {p.price} kr.
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
+            <div className="mt-6 flex items-center justify-between">
+              {totalPrice > 0 ? (
+                <span className="text-sm font-semibold text-pink-700">
+                  I alt: {totalPrice} kr.
+                </span>
+              ) : (
+                <span />
+              )}
+              <button
+                type="button"
+                disabled={selectedPiercings.length === 0}
+                onClick={() => setStep(1)}
+                className="rounded-full bg-pink-500 px-7 py-3 font-semibold text-white shadow-sm shadow-pink-300 transition-transform hover:scale-105 hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Videre
+              </button>
+            </div>
           </motion.div>
         )}
 
@@ -227,7 +280,9 @@ export function BookingForm({
               Dine oplysninger
             </h2>
             <p className="mb-5 text-sm text-pink-900/60">
-              {piercing?.name} · <span className="capitalize">{formatSlot(slot?.startsAt)}</span>
+              {selectedPiercings.map((p) => p.name).join(", ")}
+              {totalPrice > 0 ? ` · ${totalPrice} kr.` : ""} ·{" "}
+              <span className="capitalize">{formatSlot(slot?.startsAt)}</span>
             </p>
 
             <form

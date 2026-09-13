@@ -38,6 +38,21 @@ export function MyBookingsList({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, string[]>>({});
+
+  function draftFor(b: MyBooking): string[] {
+    return drafts[b._id] ?? b.piercings?.map((p) => p._id) ?? [];
+  }
+
+  function toggleDraft(b: MyBooking, piercingId: string) {
+    setDrafts((prev) => {
+      const current = prev[b._id] ?? b.piercings?.map((p) => p._id) ?? [];
+      const next = current.includes(piercingId)
+        ? current.filter((id) => id !== piercingId)
+        : [...current, piercingId];
+      return { ...prev, [b._id]: next };
+    });
+  }
 
   async function cancel(id: string) {
     if (!confirm("Er du sikker på, at du vil aflyse denne booking?")) return;
@@ -60,14 +75,15 @@ export function MyBookingsList({
     }
   }
 
-  async function changePiercing(id: string, piercingId: string) {
+  async function changePiercings(id: string, piercingIds: string[]) {
+    if (piercingIds.length === 0) return;
     setSavingId(id);
     setError(null);
     try {
       const res = await fetch(`/api/bookings/${id}/piercing`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ piercingId }),
+        body: JSON.stringify({ piercingIds }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -76,11 +92,13 @@ export function MyBookingsList({
       }
       setItems((prev) =>
         prev.map((b) =>
-          b._id === id
-            ? { ...b, piercingId, piercingName: data.piercingName }
-            : b,
+          b._id === id ? { ...b, piercings: data.piercings } : b,
         ),
       );
+      setDrafts((prev) => {
+        const { [id]: _removed, ...rest } = prev;
+        return rest;
+      });
     } catch {
       setError("Kunne ikke oprette forbindelse. Prøv igen.");
     } finally {
@@ -118,7 +136,9 @@ export function MyBookingsList({
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="font-display text-lg font-semibold text-pink-800">
-                  {b.piercingName ?? "Piercing"}
+                  {b.piercings && b.piercings.length > 0
+                    ? b.piercings.map((p) => p.name).join(", ")
+                    : "Piercing"}
                 </h3>
                 <p className="mt-1 text-sm capitalize text-pink-900/70">
                   {formatSlot(b.slotStartsAt)}
@@ -135,34 +155,51 @@ export function MyBookingsList({
 
             {canChange && piercings.length > 0 && (
               <div className="mt-4">
-                <label
-                  htmlFor={`piercing-${b._id}`}
-                  className="mb-1 block text-sm font-medium text-pink-800"
-                >
-                  Skift piercing
+                <label className="mb-1 block text-sm font-medium text-pink-800">
+                  Skift piercinger
                 </label>
-                <select
-                  id={`piercing-${b._id}`}
-                  value={b.piercingId ?? ""}
-                  disabled={savingId === b._id}
-                  onChange={(e) => changePiercing(b._id, e.target.value)}
-                  className="w-full rounded-2xl border border-pink-200 bg-white px-4 py-2.5 text-pink-900 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-200 disabled:cursor-not-allowed disabled:opacity-60"
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {piercings.map((p) => {
+                    const selected = draftFor(b).includes(p._id);
+                    return (
+                      <button
+                        key={p._id}
+                        type="button"
+                        disabled={savingId === b._id}
+                        onClick={() => toggleDraft(b, p._id)}
+                        className={`flex items-center justify-between rounded-2xl border px-4 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                          selected
+                            ? "border-pink-400 bg-pink-50"
+                            : "border-pink-100 bg-white"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={`flex h-4 w-4 items-center justify-center rounded-md border text-[10px] text-white ${
+                              selected
+                                ? "border-pink-500 bg-pink-500"
+                                : "border-pink-300 bg-white"
+                            }`}
+                          >
+                            {selected && "✓"}
+                          </span>
+                          {p.name}
+                        </span>
+                        {p.price != null && (
+                          <span className="text-pink-600">{p.price} kr.</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  disabled={savingId === b._id || draftFor(b).length === 0}
+                  onClick={() => changePiercings(b._id, draftFor(b))}
+                  className="mt-3 rounded-full bg-pink-500 px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-105 hover:bg-pink-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {b.piercingId == null && (
-                    <option value="" disabled>
-                      Vælg piercing
-                    </option>
-                  )}
-                  {piercings.map((p) => (
-                    <option key={p._id} value={p._id}>
-                      {p.name}
-                      {p.price != null ? ` · ${p.price} kr.` : ""}
-                    </option>
-                  ))}
-                </select>
-                {savingId === b._id && (
-                  <p className="mt-1 text-xs text-pink-600">Gemmer…</p>
-                )}
+                  {savingId === b._id ? "Gemmer…" : "Gem ændringer"}
+                </button>
               </div>
             )}
 

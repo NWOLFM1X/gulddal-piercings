@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'node:crypto'
 import { writeClient } from '@/sanity/lib/writeClient'
 import { createMagicToken } from '@/lib/auth'
 import {
@@ -16,7 +17,7 @@ type BookingBody = {
   email?: string
   phone?: string
   message?: string
-  piercingId?: string
+  piercingIds?: string[]
   slotId?: string
   // Honeypot mod spam-bots. Skal være tom.
   company?: string
@@ -39,7 +40,10 @@ export async function POST(req: NextRequest) {
   const email = body.email?.trim().toLowerCase()
   const phone = body.phone?.trim()
   const message = body.message?.trim() || ''
-  const { piercingId, slotId } = body
+  const piercingIds = Array.isArray(body.piercingIds)
+    ? [...new Set(body.piercingIds.filter((id): id is string => Boolean(id)))]
+    : []
+  const { slotId } = body
 
   // Honeypot: hvis udfyldt, lad som om alt gik godt (bot).
   if (body.company) {
@@ -56,7 +60,7 @@ export async function POST(req: NextRequest) {
   if (!phone || phone.length < 6) {
     return NextResponse.json({ error: 'Indtast et telefonnummer.' }, { status: 400 })
   }
-  if (!piercingId || !slotId) {
+  if (piercingIds.length === 0 || !slotId) {
     return NextResponse.json(
       { error: 'Vælg både piercing og tid.' },
       { status: 400 },
@@ -64,8 +68,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Hent tid + piercing frisk fra API'et (ikke CDN) for korrekt status/_rev.
-    const [slot, piercing] = await Promise.all([
+    // Hent tid + piercinger frisk fra API'et (ikke CDN) for korrekt status/_rev.
+    const [slot, foundPiercings] = await Promise.all([
       writeClient.fetch<{
         _id: string
         _rev: string
@@ -75,18 +79,18 @@ export async function POST(req: NextRequest) {
         `*[_type == "timeSlot" && _id == $id][0]{ _id, _rev, status, startsAt }`,
         { id: slotId },
       ),
-      writeClient.fetch<{ _id: string; name: string; price: number } | null>(
-        `*[_type == "piercingType" && _id == $id && active == true][0]{ _id, name, price }`,
-        { id: piercingId },
+      writeClient.fetch<{ _id: string; name: string; price: number }[]>(
+        `*[_type == "piercingType" && _id in $ids && active == true]{ _id, name, price }`,
+        { ids: piercingIds },
       ),
     ])
 
     if (!slot) {
       return NextResponse.json({ error: 'Tiden findes ikke.' }, { status: 404 })
     }
-    if (!piercing) {
+    if (foundPiercings.length !== piercingIds.length) {
       return NextResponse.json(
-        { error: 'Piercingen findes ikke.' },
+        { error: 'En eller flere piercinger findes ikke.' },
         { status: 404 },
       )
     }
@@ -108,7 +112,11 @@ export async function POST(req: NextRequest) {
         email,
         phone,
         message,
-        piercing: { _type: 'reference', _ref: piercingId },
+        piercings: piercingIds.map((id) => ({
+          _type: 'reference',
+          _ref: id,
+          _key: randomUUID(),
+        })),
         slot: { _type: 'reference', _ref: slotId },
         status: 'new',
         paymentStatus: 'none',
@@ -134,7 +142,7 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       message,
-      piercing,
+      piercings: foundPiercings,
       slot,
     })
 
@@ -145,8 +153,8 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       message,
-      piercingName: piercing.name,
-      price: piercing.price,
+      piercingName: foundPiercings.map((p) => p.name).join(', '),
+      price: foundPiercings.reduce((sum, p) => sum + (p.price ?? 0), 0),
       startsAt: slot.startsAt,
     })
 
@@ -174,7 +182,7 @@ export async function POST(req: NextRequest) {
  *     "email": "…",
  *     "phone": "…",
  *     "message": "…",
- *     "piercing": { "id": "…", "name": "Septum", "price": 400 },
+ *     "piercings": [{ "id": "…", "name": "Septum", "price": 400 }],
  *     "slot": { "id": "…", "startsAt": "2026-09-01T12:00:00.000Z" },
  *     "createdAt": "2026-08-23T…Z"
  *   }
@@ -186,7 +194,7 @@ async function notifyWebhook(data: {
   email: string
   phone: string
   message: string
-  piercing: { _id: string; name: string; price: number }
+  piercings: { _id: string; name: string; price: number }[]
   slot: { _id: string; startsAt: string }
 }) {
   const url = process.env.BOOKING_WEBHOOK_URL
@@ -200,11 +208,11 @@ async function notifyWebhook(data: {
       email: data.email,
       phone: data.phone,
       message: data.message,
-      piercing: {
-        id: data.piercing._id,
-        name: data.piercing.name,
-        price: data.piercing.price,
-      },
+      piercings: data.piercings.map((p) => ({
+        id: p._id,
+        name: p.name,
+        price: p.price,
+      })),
       slot: {
         id: data.slot._id,
         startsAt: data.slot.startsAt,

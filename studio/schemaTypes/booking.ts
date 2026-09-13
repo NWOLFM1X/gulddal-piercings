@@ -26,10 +26,10 @@ export const booking = defineType({
       readOnly: true,
     }),
     defineField({
-      name: 'piercing',
-      title: 'Piercing',
-      type: 'reference',
-      to: [{ type: 'piercingType' }],
+      name: 'piercings',
+      title: 'Piercinger',
+      type: 'array',
+      of: [{ type: 'reference', to: [{ type: 'piercingType' }] }],
       readOnly: true,
     }),
     defineField({
@@ -87,15 +87,16 @@ export const booking = defineType({
     select: {
       name: 'name',
       status: 'status',
-      piercing: 'piercing.name',
+      piercingNames: 'piercings[]->name',
       startsAt: 'slot.startsAt',
     },
-    prepare({ name, status, piercing, startsAt }) {
+    prepare({ name, status, piercingNames, startsAt }) {
       const labels: Record<string, string> = {
         new: '🆕 Ny',
         confirmed: '✅ Bekræftet',
         cancelled: '❌ Aflyst',
       }
+      const piercing = Array.isArray(piercingNames) ? piercingNames.join(', ') : undefined
       const date = startsAt
         ? new Date(startsAt).toLocaleString('da-DK', {
             day: '2-digit',

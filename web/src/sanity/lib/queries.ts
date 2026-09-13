@@ -102,8 +102,7 @@ export const bookingsByEmailQuery = defineQuery(`
     status,
     message,
     _createdAt,
-    "piercingId": piercing->_id,
-    "piercingName": piercing->name,
+    "piercings": piercings[]->{ _id, name },
     "slotStartsAt": slot->startsAt,
     "slotStatus": slot->status
   }
