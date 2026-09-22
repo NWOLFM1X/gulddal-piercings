@@ -7,7 +7,10 @@ import {
   HomeIcon,
   HeartIcon,
   ClipboardIcon,
+  TrashIcon,
 } from '@sanity/icons'
+import { BookingsBulkList } from './components/BookingsBulkList'
+import { TimeSlotsBulkList } from './components/TimeSlotsBulkList'
 
 // Singletons — dokumenter der kun findes ét af.
 const singletons = ['siteSettings', 'homePage', 'aftercare', 'beforeBooking']
@@ -25,12 +28,30 @@ export const structure: StructureResolver = (S) =>
             .defaultOrdering([{ field: '_createdAt', direction: 'desc' }]),
         ),
       S.listItem()
+        .title('Slet flere bookinger')
+        .icon(TrashIcon)
+        .id('bookings-bulk-delete')
+        .child(
+          S.component(BookingsBulkList)
+            .id('bookings-bulk-delete-view')
+            .title('Slet flere bookinger'),
+        ),
+      S.listItem()
         .title('Ledige tider')
         .icon(CalendarIcon)
         .child(
           S.documentTypeList('timeSlot')
             .title('Ledige tider')
             .defaultOrdering([{ field: 'startsAt', direction: 'asc' }]),
+        ),
+      S.listItem()
+        .title('Slet flere ledige tider')
+        .icon(TrashIcon)
+        .id('timeslots-bulk-delete')
+        .child(
+          S.component(TimeSlotsBulkList)
+            .id('timeslots-bulk-delete-view')
+            .title('Slet flere ledige tider'),
         ),
       S.listItem()
         .title('Piercinger')
