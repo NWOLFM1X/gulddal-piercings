@@ -74,6 +74,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
 
       <div className="border-t border-pink-100 py-4 text-center text-xs text-pink-900/50">
         © {year} {title}
+        {settings?.cvr && <span> · CVR: {settings.cvr}</span>}
       </div>
     </footer>
   );

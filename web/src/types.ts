@@ -13,6 +13,7 @@ export type SiteSettings = {
   logo?: SanityImage;
   phone?: string;
   email?: string;
+  cvr?: string;
   address?: string;
   openingHours?: string;
   instagram?: string;
@@ -49,6 +50,10 @@ export type MyBooking = {
 };
 
 export type FaqItem = { question?: string; answer?: string };
+
+export type BookingPage = {
+  piercingHelpText?: string;
+} | null;
 
 export type Aftercare = {
   heading?: string;

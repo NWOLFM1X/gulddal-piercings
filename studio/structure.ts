@@ -13,7 +13,7 @@ import { BookingsBulkList } from './components/BookingsBulkList'
 import { TimeSlotsBulkList } from './components/TimeSlotsBulkList'
 
 // Singletons — dokumenter der kun findes ét af.
-const singletons = ['siteSettings', 'homePage', 'aftercare', 'beforeBooking']
+const singletons = ['siteSettings', 'homePage', 'aftercare', 'beforeBooking', 'bookingPage']
 
 export const structure: StructureResolver = (S) =>
   S.list()
@@ -77,6 +77,11 @@ export const structure: StructureResolver = (S) =>
         .icon(ClipboardIcon)
         .id('beforeBooking')
         .child(S.document().schemaType('beforeBooking').documentId('beforeBooking')),
+      S.listItem()
+        .title('Booking')
+        .icon(CalendarIcon)
+        .id('bookingPage')
+        .child(S.document().schemaType('bookingPage').documentId('bookingPage')),
       S.listItem()
         .title('Indstillinger')
         .icon(CogIcon)

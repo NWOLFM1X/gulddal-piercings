@@ -8,6 +8,7 @@ export const siteSettingsQuery = defineQuery(`
     logo,
     phone,
     email,
+    cvr,
     address,
     openingHours,
     instagram,
@@ -33,6 +34,12 @@ export const homePageQuery = defineQuery(`
       question,
       answer
     }
+  }
+`)
+
+export const bookingPageQuery = defineQuery(`
+  *[_type == "bookingPage"][0]{
+    piercingHelpText
   }
 `)
 

@@ -66,6 +66,12 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     )
   }
+  if (piercingIds.length > 2) {
+    return NextResponse.json(
+      { error: 'Du kan højst vælge to piercinger pr. booking.' },
+      { status: 400 },
+    )
+  }
 
   try {
     // Hent tid + piercinger frisk fra API'et (ikke CDN) for korrekt status/_rev.

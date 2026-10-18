@@ -8,6 +8,8 @@ import type { Piercing, Slot } from "@/types";
 
 type Step = 0 | 1 | 2 | 3;
 
+const MAX_PIERCINGS = 2;
+
 function formatSlot(iso?: string) {
   if (!iso) return "";
   return new Date(iso).toLocaleString("da-DK", {
@@ -23,9 +25,11 @@ function formatSlot(iso?: string) {
 export function BookingForm({
   piercings,
   slots,
+  helpText,
 }: {
   piercings: Piercing[];
   slots: Slot[];
+  helpText?: string;
 }) {
   const [step, setStep] = useState<Step>(0);
   const [selectedPiercings, setSelectedPiercings] = useState<Piercing[]>([]);
@@ -57,11 +61,15 @@ export function BookingForm({
   );
 
   function togglePiercing(p: Piercing) {
-    setSelectedPiercings((prev) =>
-      prev.some((sel) => sel._id === p._id)
-        ? prev.filter((sel) => sel._id !== p._id)
-        : [...prev, p],
-    );
+    setSelectedPiercings((prev) => {
+      if (prev.some((sel) => sel._id === p._id)) {
+        return prev.filter((sel) => sel._id !== p._id);
+      }
+      if (prev.length >= MAX_PIERCINGS) {
+        return prev;
+      }
+      return [...prev, p];
+    });
   }
 
   async function submit() {
@@ -160,7 +168,7 @@ export function BookingForm({
               Hvilke piercinger vil du have?
             </h2>
             <p className="mb-4 text-sm text-pink-900/60">
-              Du kan vælge en eller flere piercinger.
+              {helpText?.trim() || "Du kan vælge en eller flere piercinger."}
             </p>
             {piercings.length === 0 ? (
               <p className="text-pink-900/60">
@@ -172,6 +180,8 @@ export function BookingForm({
                   const selected = selectedPiercings.some(
                     (sel) => sel._id === p._id,
                   );
+                  const limitReached =
+                    !selected && selectedPiercings.length >= MAX_PIERCINGS;
                   const img = p.image?.asset
                     ? urlForImage(p.image).width(120).height(120).fit("crop").url()
                     : null;
@@ -179,11 +189,12 @@ export function BookingForm({
                     <button
                       key={p._id}
                       onClick={() => togglePiercing(p)}
+                      disabled={limitReached}
                       className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${
                         selected
                           ? "border-pink-400 bg-pink-50"
                           : "border-pink-100 bg-white"
-                      }`}
+                      } ${limitReached ? "cursor-not-allowed opacity-50 hover:translate-y-0 hover:shadow-none" : ""}`}
                     >
                       <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-pink-100">
                         {img ? (
@@ -250,6 +261,11 @@ export function BookingForm({
                 Videre
               </button>
             </div>
+            {selectedPiercings.length >= MAX_PIERCINGS && (
+              <p className="mt-3 text-right text-xs text-pink-900/50">
+                Du kan vælge op til {MAX_PIERCINGS} piercinger pr. booking.
+              </p>
+            )}
           </motion.div>
         )}
 

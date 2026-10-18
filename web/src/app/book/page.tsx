@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { sanityFetch } from "@/sanity/lib/live";
-import { piercingsQuery, availableSlotsQuery } from "@/sanity/lib/queries";
+import { piercingsQuery, availableSlotsQuery, bookingPageQuery } from "@/sanity/lib/queries";
 import { BookingForm } from "@/components/BookingForm";
 import { Reveal } from "@/components/Reveal";
-import type { Piercing, Slot } from "@/types";
+import type { Piercing, Slot, BookingPage } from "@/types";
 
 export const metadata: Metadata = {
   title: "Book tid",
@@ -15,10 +15,12 @@ export const dynamic = "force-dynamic";
 
 export default async function BookPage() {
   const now = new Date().toISOString();
-  const [{ data: piercings }, { data: slots }] = await Promise.all([
-    sanityFetch({ query: piercingsQuery }),
-    sanityFetch({ query: availableSlotsQuery, params: { now } }),
-  ]);
+  const [{ data: piercings }, { data: slots }, { data: bookingPage }] =
+    await Promise.all([
+      sanityFetch({ query: piercingsQuery }),
+      sanityFetch({ query: availableSlotsQuery, params: { now } }),
+      sanityFetch({ query: bookingPageQuery }),
+    ]);
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
@@ -37,6 +39,7 @@ export default async function BookPage() {
         <BookingForm
           piercings={(piercings as Piercing[]) ?? []}
           slots={(slots as Slot[]) ?? []}
+          helpText={(bookingPage as BookingPage)?.piercingHelpText}
         />
       </Reveal>
     </div>

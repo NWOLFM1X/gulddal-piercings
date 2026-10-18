@@ -42,6 +42,12 @@ export const siteSettings = defineType({
       type: 'string',
     }),
     defineField({
+      name: 'cvr',
+      title: 'CVR-nummer',
+      type: 'string',
+      description: 'Vises i bunden af siden (footer).',
+    }),
+    defineField({
       name: 'notifyEmail',
       title: 'Besked-email (booking-notifikationer)',
       type: 'string',
