@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { PortableText } from "next-sanity";
@@ -7,6 +8,13 @@ import { urlForImage } from "@/sanity/lib/image";
 import { Reveal } from "@/components/Reveal";
 import { PiercingCard } from "@/components/PiercingCard";
 import type { HomePage, Piercing } from "@/types";
+
+export const metadata: Metadata = {
+  other: {
+    "trustpilot-one-time-domain-verification-id":
+      "2f744dbb-d0bd-4df9-8ba9-480b1d398ad9",
+  },
+};
 
 export default async function Home() {
   const [{ data: home }, { data: piercings }] = await Promise.all([
